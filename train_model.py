@@ -1,14 +1,25 @@
 # train_model.py
 
-from sklearn.datasets import load_iris
+import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pickle
 
-# Load sample dataset
-X, y = load_iris(return_X_y=True)
+# Load your dataset
+df = pd.read_csv("your_dataset.csv")
 
-# Standard preprocessing
+# Encode categorical columns
+cat_cols = df.select_dtypes(include='object').columns
+for col in cat_cols:
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+
+# Separate features and target
+X = df.drop("Churn", axis=1)
+y = df["Churn"]
+
+# Scale features
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
@@ -16,6 +27,9 @@ X_scaled = scaler.fit_transform(X)
 model = RandomForestClassifier()
 model.fit(X_scaled, y)
 
-# Save model and scaler together (standard objects only!)
-with open("model.pkl", "wb") as f:
-    pickle.dump((model, scaler), f)
+# Save model and scaler separately
+with open("churn_model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
+with open("scaler.pkl", "wb") as f:
+    pickle.dump(scaler, f)
