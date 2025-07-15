@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+from sklearn.preprocessing import LabelEncoder
 
-# Load model and scaler
+# Load model and scaler from separate files
 @st.cache_resource
 def load_model_scaler():
     with open("churn_model.pkl", "rb") as f:
@@ -47,7 +48,6 @@ with st.form("input_form"):
 
 # When form is submitted
 if submitted:
-    # Input DataFrame
     input_dict = {
         'gender': [gender],
         'SeniorCitizen': [1 if senior == 'Yes' else 0],
@@ -72,17 +72,13 @@ if submitted:
 
     input_df = pd.DataFrame(input_dict)
 
-    # Encode categorical features
-    from sklearn.preprocessing import LabelEncoder
-
-    # Ensure column order matches training
+    # Encode categorical columns using LabelEncoder (must match training)
     cat_cols = input_df.select_dtypes(include='object').columns
     for col in cat_cols:
         le = LabelEncoder()
-        # Use dummy fit to maintain order — ideally use same encoder as training
-        input_df[col] = le.fit_transform(input_df[col])
+        input_df[col] = le.fit_transform(input_df[col])  # WARNING: should use same encoder from training!
 
-    # Scale numeric input
+    # Scale features
     input_scaled = scaler.transform(input_df)
 
     # Predict
@@ -91,4 +87,3 @@ if submitted:
 
     st.success(f"🧾 Churn Prediction: {'Yes' if prediction == 1 else 'No'}")
     st.info(f"🔢 Churn Probability: {proba:.2%}")
-
